@@ -57,6 +57,10 @@ Logged events include retrieval metadata, guardrail triggers, and model/fallback
 └── requirements.txt
 ```
 
+## System Diagram
+
+- See [assets/system_diagram.md](assets/system_diagram.md) for a short architecture and data-flow diagram.
+
 ## Reproducible Setup
 
 ### Prerequisites
