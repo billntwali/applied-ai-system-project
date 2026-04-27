@@ -3,6 +3,7 @@ Demo script — run with: python3 main.py
 Exercises all scheduler features: sorting, filtering, recurring tasks, conflict detection.
 """
 
+from ai_assistant import PetCareAssistant
 from pawpal_system import Owner, Pet, Task, Scheduler, ScheduledTask
 
 
@@ -104,6 +105,25 @@ def main():
             print(w)
     else:
         print("  No conflicts in the auto-generated schedule.")
+
+    # -----------------------------------------------------------------------
+    # 6. Agentic AI workflow (plan -> act -> check)
+    # -----------------------------------------------------------------------
+    section("6. Agentic AI copilot")
+    assistant = PetCareAssistant()
+    briefing = assistant.generate_daily_briefing(owner=owner, schedule=schedule)
+    print(briefing.answer)
+    print("  Workflow trace:")
+    for step in briefing.workflow_trace:
+        print(f"   - {step}")
+
+    section("6b. Ask a custom AI question")
+    answer = assistant.answer_question(
+        question="How can I make the plan easier for a busy workday?",
+        owner=owner,
+        schedule=schedule,
+    )
+    print(answer.answer)
 
 
 if __name__ == "__main__":
