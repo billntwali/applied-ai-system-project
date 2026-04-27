@@ -78,8 +78,11 @@ pip install -r requirements.txt
 
 ### 4) Optional: enable OpenAI generation
 ```bash
-export OPENAI_API_KEY="your_key_here"
+# safer: enter key in terminal without saving it in this repo
+read -s OPENAI_API_KEY && export OPENAI_API_KEY
 ```
+Then paste your API key when prompted.
+Do not store real keys in project files (`README.md`, `.py` files, or tracked config).
 Without `OPENAI_API_KEY`, the system still runs in local deterministic fallback mode.
 
 ### 5) Run Streamlit app
