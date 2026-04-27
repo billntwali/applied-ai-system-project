@@ -135,7 +135,23 @@ Quick reliability snapshot:
 - Fallback paths should be tested as first-class behavior, not as edge cases.
 
 ## Reflection
-This project reinforced that useful AI systems are rarely just "call a model and print text." The strongest results came from combining classic software engineering (clear domain models, deterministic scheduling, tests) with AI patterns (RAG, agentic self-checks, guardrails, observability). I also learned that trustworthiness is a product feature: users need transparent sources, safe failure modes, and consistent behavior more than flashy output.
+### What are the limitations or biases in this system?
+- The retriever uses lexical matching, so it favors wording overlap and can miss semantically relevant guidance written with different terms.
+- The local knowledge base reflects the assumptions and priorities of whoever authored it, which can bias recommendations toward routine household care patterns.
+- Confidence scoring is a heuristic, not calibrated probability, so it helps with relative trust but should not be treated as a medical certainty score.
+
+### Could this AI be misused, and how is misuse reduced?
+- Misuse risk: users could ask for unsafe medical instructions or try prompt-injection attacks to bypass constraints.
+- Mitigations in code: guardrails block injection-style requests, emergency keywords trigger escalation messaging, and answers include source traces for human review.
+- Operational mitigation: the app presents AI as planning support, not veterinary diagnosis, and encourages escalation for urgent situations.
+
+### What surprised me while testing reliability?
+- Guardrail behavior was straightforward to test and very stable.
+- The bigger challenge was not outright failure, but confidence drift: responses looked plausible even when context quality dropped. Adding explicit confidence scoring and a context-poor test case made that weakness visible.
+
+### Collaboration with AI during this project
+- Helpful suggestion: AI-assisted brainstorming helped structure the system as deterministic scheduler + agentic RAG copilot, which improved testability and separation of concerns.
+- Flawed suggestion: an early suggestion implied retrieval output alone was enough to demonstrate RAG quality. In practice, I had to add reliability checks, guardrail tests, and confidence reporting to prove the AI was actually dependable.
 
 ## Repository Structure
 ```text

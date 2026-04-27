@@ -112,3 +112,29 @@ Two things stand out:
 **c. Key takeaway**
 
 The most important lesson was about *staying the architect*. AI tools are extremely good at generating plausible code quickly, but "plausible" is not the same as "correct for this design." At several points the AI generated code that worked in isolation but violated the design — for example, adding logic directly to `Task.mark_complete()` that reached outside the class to update a pet's task list, coupling two objects that should be independent. Catching those violations required reading the generated code critically, not just running the tests. The tests passing is a necessary condition for correctness, but not a sufficient one — the code also needs to respect the boundaries the architecture established. Working with AI effectively means treating it as a fast junior developer: review everything, accept what fits, rewrite what doesn't.
+
+---
+
+## 6. Responsible AI Reflection (Short)
+
+### Limitations and Biases
+
+- Retrieval is lexical, so the assistant can miss relevant guidance when a user uses very different wording.
+- The knowledge base reflects a limited set of pet-care assumptions and may not generalize to all homes or medical contexts.
+- Confidence is a heuristic signal for reliability, not a calibrated probability of truth.
+
+### Misuse Risk and Mitigations
+
+- Potential misuse includes prompt-injection attempts and requests for unsafe medical advice.
+- The system mitigates this with guardrails: injection-style prompts are blocked, emergency language triggers escalation messaging, and responses include source traceability.
+- Logging (`logs/pawpal_ai.log`) records key events to support debugging and accountability.
+
+### Reliability Surprise
+
+- The biggest surprise was that low-context answers could still look plausible.
+- Confidence scoring plus explicit weak-context tests made this visible and easier to monitor.
+
+### Collaboration with AI During Development
+
+- Helpful AI suggestion: using a clear separation between deterministic scheduling and an AI copilot improved testability and made failures easier to isolate.
+- Flawed AI suggestion: an early suggestion implied that retrieval alone was enough evidence of quality; in practice I needed explicit reliability checks, confidence reporting, and guardrail tests to show the system was trustworthy.
