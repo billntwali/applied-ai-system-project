@@ -111,20 +111,30 @@ def main():
     # -----------------------------------------------------------------------
     section("6. Agentic AI copilot")
     assistant = PetCareAssistant()
-    briefing = assistant.generate_daily_briefing(owner=owner, schedule=schedule)
+    briefing = assistant.generate_daily_briefing(
+        owner=owner,
+        schedule=schedule,
+        style="calm_coach",
+    )
     print(briefing.answer)
+    print(f"  Style: {briefing.style}")
     print(f"  Confidence: {briefing.confidence:.2f}")
     print("  Workflow trace:")
     for step in briefing.workflow_trace:
         print(f"   - {step}")
+    print("  Intermediate steps:")
+    for step in briefing.steps:
+        print(f"   - {step.name}: {step.observation}")
 
     section("6b. Ask a custom AI question")
     answer = assistant.answer_question(
         question="How can I make the plan easier for a busy workday?",
         owner=owner,
         schedule=schedule,
+        style="balanced",
     )
     print(answer.answer)
+    print(f"  Style: {answer.style}")
     print(f"  Confidence: {answer.confidence:.2f}")
 
 

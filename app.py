@@ -20,13 +20,21 @@ def render_ai_response(response: AIResponse) -> None:
     else:
         st.markdown(response.answer)
 
-    sources = ", ".join(item.title for item in response.sources) if response.sources else "None"
+    sources = (
+        ", ".join(f"{item.title} ({item.source})" for item in response.sources)
+        if response.sources else
+        "None"
+    )
     st.caption(
-        f"Mode: `{response.mode}` · Confidence: `{response.confidence:.2f}` · Sources: {sources}"
+        f"Mode: `{response.mode}` · Style: `{response.style}` · "
+        f"Confidence: `{response.confidence:.2f}` · Sources: {sources}"
     )
     with st.expander("Agentic workflow trace", expanded=False):
         for step in response.workflow_trace:
             st.write(f"- {step}")
+    with st.expander("Intermediate agent steps", expanded=False):
+        rows = [{"Step": step.name, "Observation": step.observation} for step in response.steps]
+        st.table(rows)
 
 # ---------------------------------------------------------------------------
 # Session state — Owner is created once and persisted across reruns
@@ -236,10 +244,17 @@ with tab_schedule:
             if assistant is None:
                 st.error(f"AI assistant unavailable: {st.session_state['assistant_error']}")
             else:
+                briefing_style = st.selectbox(
+                    "Briefing style",
+                    ["balanced", "calm_coach"],
+                    key="briefing_style",
+                    help="Specialized style changes tone/format while keeping the same retrieved grounding.",
+                )
                 if st.button("Generate AI briefing"):
                     st.session_state["ai_daily_brief"] = assistant.generate_daily_briefing(
                         owner=owner,
                         schedule=schedule,
+                        style=briefing_style,
                     )
                 if "ai_daily_brief" in st.session_state:
                     render_ai_response(st.session_state["ai_daily_brief"])
@@ -298,6 +313,12 @@ with tab_ai:
     if assistant is None:
         st.error(f"AI assistant unavailable: {st.session_state['assistant_error']}")
     else:
+        response_style = st.selectbox(
+            "Response style",
+            ["balanced", "calm_coach"],
+            key="copilot_style",
+            help="`calm_coach` is a specialized, constrained response format.",
+        )
         include_schedule = st.checkbox(
             "Include today's schedule context",
             value=True,
@@ -314,6 +335,7 @@ with tab_ai:
                 question=question,
                 owner=owner,
                 schedule=context_schedule,
+                style=response_style,
             )
 
         if "ai_last_response" in st.session_state:

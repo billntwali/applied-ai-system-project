@@ -32,6 +32,13 @@ def test_retrieve_finds_medication_section():
     assert results[0].title == "Medication Safety"
 
 
+def test_retrieve_uses_secondary_knowledge_source():
+    assistant = PetCareAssistant(enable_llm=False, logger=_test_logger("ai_test_multisource"))
+    results = assistant.retrieve("How should I track cone compliance after surgery?", top_k=3)
+    assert results
+    assert any(item.source == "pet_health_reference.md" for item in results)
+
+
 def test_guardrail_blocks_prompt_injection():
     owner, schedule = _sample_owner_and_schedule()
     assistant = PetCareAssistant(enable_llm=False, logger=_test_logger("ai_test_injection"))
@@ -69,6 +76,8 @@ def test_answer_question_uses_agentic_trace_and_sources():
     assert response.mode == "local_agentic_rag"
     assert response.guardrail_triggered is False
     assert response.sources
+    assert response.steps
+    assert any(step.name == "retrieve_knowledge" for step in response.steps)
     assert any(step.startswith("plan:") for step in response.workflow_trace)
     assert any(step.startswith("check:") for step in response.workflow_trace)
     assert "Sources used:" in response.answer
@@ -82,6 +91,7 @@ def test_generate_daily_briefing_runs_through_main_workflow():
     assert response.mode == "local_agentic_rag"
     assert response.guardrail_triggered is False
     assert response.workflow_trace
+    assert response.steps
     assert response.confidence > 0.45
 
 
@@ -101,3 +111,28 @@ def test_confidence_is_lower_when_no_context_matches():
     )
 
     assert grounded.confidence > weak.confidence
+
+
+def test_style_specialization_changes_output_format():
+    owner, schedule = _sample_owner_and_schedule()
+    assistant = PetCareAssistant(enable_llm=False, logger=_test_logger("ai_test_style"))
+
+    balanced = assistant.answer_question(
+        question="How can I keep this routine sustainable during a busy day?",
+        owner=owner,
+        schedule=schedule,
+        style="balanced",
+    )
+    coach = assistant.answer_question(
+        question="How can I keep this routine sustainable during a busy day?",
+        owner=owner,
+        schedule=schedule,
+        style="calm_coach",
+    )
+
+    assert balanced.style == "balanced"
+    assert coach.style == "calm_coach"
+    assert "Priority now:" in coach.answer
+    assert "Small next step:" in coach.answer
+    assert "Encouragement:" in coach.answer
+    assert "Priority now:" not in balanced.answer
