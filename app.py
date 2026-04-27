@@ -1,17 +1,47 @@
 import streamlit as st
+from ai_assistant import AIResponse, PetCareAssistant
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
 st.title("🐾 PawPal+")
-st.caption("A smart daily care planner for your pets.")
+st.caption("A smart daily care planner with an agentic AI copilot.")
+
+
+def clear_cached_outputs() -> None:
+    """Clear generated schedule and AI outputs when core data changes."""
+    for key in ("last_schedule", "ai_daily_brief", "ai_last_response"):
+        st.session_state.pop(key, None)
+
+
+def render_ai_response(response: AIResponse) -> None:
+    """Reusable UI renderer for AI answers and trace metadata."""
+    if response.guardrail_triggered:
+        st.warning(response.answer)
+    else:
+        st.markdown(response.answer)
+
+    sources = ", ".join(item.title for item in response.sources) if response.sources else "None"
+    st.caption(f"Mode: `{response.mode}` · Sources: {sources}")
+    with st.expander("Agentic workflow trace", expanded=False):
+        for step in response.workflow_trace:
+            st.write(f"- {step}")
 
 # ---------------------------------------------------------------------------
 # Session state — Owner is created once and persisted across reruns
 # ---------------------------------------------------------------------------
 if "owner" not in st.session_state:
     st.session_state["owner"] = Owner(name="Jordan", day_start="08:00", day_end="20:00")
+if "assistant_error" not in st.session_state:
+    st.session_state["assistant_error"] = None
+if "assistant" not in st.session_state:
+    try:
+        st.session_state["assistant"] = PetCareAssistant()
+    except Exception as exc:
+        st.session_state["assistant_error"] = str(exc)
+        st.session_state["assistant"] = None
 
 owner: Owner = st.session_state["owner"]
+assistant: PetCareAssistant | None = st.session_state["assistant"]
 
 
 # ---------------------------------------------------------------------------
@@ -26,17 +56,20 @@ with st.sidebar:
         owner.name      = new_name
         owner.day_start = new_start
         owner.day_end   = new_end
-        st.session_state.pop("last_schedule", None)   # invalidate cached schedule
+        clear_cached_outputs()
         st.success(f"Saved for {owner.name}.")
 
     st.divider()
-    st.caption("PawPal+ v1.0 · Module 2 Project")
+    mode_text = "LLM-backed mode (OPENAI_API_KEY found)" if assistant and assistant.client else "Local fallback mode (no API key)"
+    st.caption(f"PawPal+ v2.0 · Agentic AI Project · {mode_text}")
 
 
 # ---------------------------------------------------------------------------
 # Main tabs
 # ---------------------------------------------------------------------------
-tab_pets, tab_schedule, tab_browse = st.tabs(["🐾 Pets & Tasks", "📅 Today's Schedule", "🔍 Browse & Filter"])
+tab_pets, tab_schedule, tab_browse, tab_ai = st.tabs(
+    ["🐾 Pets & Tasks", "📅 Today's Schedule", "🔍 Browse & Filter", "🤖 AI Copilot"]
+)
 
 
 # ===========================================================================
@@ -62,7 +95,7 @@ with tab_pets:
             name=pet_name.strip(), species=species,
             age=int(age), breed=breed.strip(),
         ))
-        st.session_state.pop("last_schedule", None)
+        clear_cached_outputs()
         st.success(f"{pet_name.strip()} added!")
 
     pets = owner.get_pets()
@@ -110,7 +143,7 @@ with tab_pets:
                 frequency=frequency,
                 is_required=is_required,
             ))
-            st.session_state.pop("last_schedule", None)
+            clear_cached_outputs()
             st.success(f"'{task_title.strip()}' added to {selected_pet_name}.")
 
         # Show each pet's task list
@@ -189,12 +222,25 @@ with tab_schedule:
                                 p for p in owner.get_pets() if p.name == entry.pet_name
                             )
                             next_task = scheduler.complete_task(target_pet, entry.task)
-                            st.session_state.pop("last_schedule", None)
+                            clear_cached_outputs()
                             if next_task:
                                 st.success(
                                     f"'{next_task.title}' is recurring — next occurrence queued for {next_task.due_date}."
                                 )
                             st.rerun()
+
+            st.divider()
+            st.subheader("Agentic AI Daily Briefing")
+            if assistant is None:
+                st.error(f"AI assistant unavailable: {st.session_state['assistant_error']}")
+            else:
+                if st.button("Generate AI briefing"):
+                    st.session_state["ai_daily_brief"] = assistant.generate_daily_briefing(
+                        owner=owner,
+                        schedule=schedule,
+                    )
+                if "ai_daily_brief" in st.session_state:
+                    render_ai_response(st.session_state["ai_daily_brief"])
 
 
 # ===========================================================================
@@ -236,3 +282,37 @@ with tab_browse:
             st.caption(f"{len(rows)} task(s) shown.")
         else:
             st.info("No tasks match the selected filters.")
+
+
+# ===========================================================================
+# Tab 4 — AI Copilot
+# ===========================================================================
+with tab_ai:
+    st.subheader("Ask the AI Copilot")
+    st.caption(
+        "This uses an agentic workflow (plan → act → self-check) with retrieval over local pet-care notes."
+    )
+
+    if assistant is None:
+        st.error(f"AI assistant unavailable: {st.session_state['assistant_error']}")
+    else:
+        include_schedule = st.checkbox(
+            "Include today's schedule context",
+            value=True,
+            help="When enabled, the AI uses your generated schedule to personalize advice.",
+        )
+        question = st.text_area(
+            "Your question",
+            value="How can I make today's plan safer and easier to maintain?",
+            height=100,
+        )
+        if st.button("Ask AI Copilot", type="primary"):
+            context_schedule = st.session_state.get("last_schedule", []) if include_schedule else []
+            st.session_state["ai_last_response"] = assistant.answer_question(
+                question=question,
+                owner=owner,
+                schedule=context_schedule,
+            )
+
+        if "ai_last_response" in st.session_state:
+            render_ai_response(st.session_state["ai_last_response"])
