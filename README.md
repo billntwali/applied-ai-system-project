@@ -108,9 +108,20 @@ I can help with pet-care planning, but I can't follow prompt-injection or system
   - Trade-off: guardrails intentionally block some requests that might be harmless in context.
 
 ## Testing Summary
+Reliability methods used in this project:
+- Automated tests (`pytest`) for scheduler and AI behavior
+- Confidence scoring (`AIResponse.confidence`) shown in UI and CLI output
+- Logging and error handling (`logs/pawpal_ai.log`)
+- Human evaluation via manual review of representative prompts
+
+Quick reliability snapshot:
+- **33 out of 33 automated tests passed**.
+- **6 out of 6 reliability checks passed** for expected mode/guardrail behavior.
+- Confidence averaged **0.59** on grounded routine/safety prompts, dropped to **0.43** on a context-poor nonsense prompt, and was **0.99** for guardrail blocks.
+
 ### What worked
 - Core scheduler tests and AI tests pass end-to-end.
-- Current status: **32 passing tests**.
+- Current status: **33 passing tests**.
 - Verified behaviors include priority scheduling, recurring tasks, conflict detection, retrieval relevance, prompt-injection blocking, emergency escalation, and agentic workflow tracing.
 
 ### What did not work perfectly (or remains limited)

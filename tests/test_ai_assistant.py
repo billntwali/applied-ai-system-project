@@ -42,6 +42,7 @@ def test_guardrail_blocks_prompt_injection():
     )
     assert response.guardrail_triggered is True
     assert response.mode == "guardrail_blocked"
+    assert response.confidence >= 0.95
 
 
 def test_guardrail_blocks_emergency_queries():
@@ -54,6 +55,7 @@ def test_guardrail_blocks_emergency_queries():
     )
     assert response.guardrail_triggered is True
     assert "emergency veterinarian" in response.answer.lower()
+    assert response.confidence >= 0.95
 
 
 def test_answer_question_uses_agentic_trace_and_sources():
@@ -70,6 +72,7 @@ def test_answer_question_uses_agentic_trace_and_sources():
     assert any(step.startswith("plan:") for step in response.workflow_trace)
     assert any(step.startswith("check:") for step in response.workflow_trace)
     assert "Sources used:" in response.answer
+    assert 0.0 <= response.confidence <= 1.0
 
 
 def test_generate_daily_briefing_runs_through_main_workflow():
@@ -79,3 +82,22 @@ def test_generate_daily_briefing_runs_through_main_workflow():
     assert response.mode == "local_agentic_rag"
     assert response.guardrail_triggered is False
     assert response.workflow_trace
+    assert response.confidence > 0.45
+
+
+def test_confidence_is_lower_when_no_context_matches():
+    owner, schedule = _sample_owner_and_schedule()
+    assistant = PetCareAssistant(enable_llm=False, logger=_test_logger("ai_test_confidence"))
+
+    grounded = assistant.answer_question(
+        question="How can I improve hydration and daily routine safety?",
+        owner=owner,
+        schedule=schedule,
+    )
+    weak = assistant.answer_question(
+        question="zxqv flarn wobble snark qubit",
+        owner=owner,
+        schedule=[],
+    )
+
+    assert grounded.confidence > weak.confidence

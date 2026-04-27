@@ -75,6 +75,7 @@ class AIResponse:
     mode: str
     guardrail_triggered: bool
     workflow_trace: list[str]
+    confidence: float
 
 
 def _tokenize(text: str) -> list[str]:
@@ -139,6 +140,7 @@ class PetCareAssistant:
                 mode="guardrail_blocked",
                 guardrail_triggered=True,
                 workflow_trace=["blocked_empty_question"],
+                confidence=0.99,
             )
 
         blocked_reason = self._guardrail_reason(clean_question)
@@ -150,6 +152,7 @@ class PetCareAssistant:
                 mode="guardrail_blocked",
                 guardrail_triggered=True,
                 workflow_trace=["guardrail_blocked"],
+                confidence=0.99,
             )
 
         retrieved = self.retrieve(clean_question, top_k=3)
@@ -165,6 +168,11 @@ class PetCareAssistant:
             "plan: retrieve relevant pet-care notes and summarize schedule context",
             "act: generate an initial grounded answer",
         ]
+        confidence = self._estimate_confidence(
+            retrieved=retrieved,
+            has_schedule_context=bool(schedule),
+            using_llm=self.client is not None,
+        )
 
         if self.client is not None:
             try:
@@ -183,6 +191,7 @@ class PetCareAssistant:
                     mode="llm_agentic_rag",
                     guardrail_triggered=False,
                     workflow_trace=workflow_trace,
+                    confidence=confidence,
                 )
             except Exception as exc:  # pragma: no cover - runtime fallback
                 self._log_event("llm_answer_failed", error=str(exc))
@@ -201,6 +210,7 @@ class PetCareAssistant:
             mode="local_agentic_rag",
             guardrail_triggered=False,
             workflow_trace=workflow_trace,
+            confidence=confidence,
         )
 
     def generate_daily_briefing(
@@ -397,6 +407,27 @@ class PetCareAssistant:
         if not notes:
             notes.append("no_changes_needed")
         return revised, notes
+
+    def _estimate_confidence(
+        self,
+        retrieved: list[RetrievedChunk],
+        has_schedule_context: bool,
+        using_llm: bool,
+    ) -> float:
+        """
+        Confidence proxy based on retrieval strength and available context.
+        Returns a bounded score in [0.0, 1.0].
+        """
+        if not retrieved:
+            base = 0.35
+        else:
+            avg_score = sum(item.score for item in retrieved) / len(retrieved)
+            base = 0.45 + min(avg_score, 1.0) * 0.4
+        if has_schedule_context:
+            base += 0.08
+        if using_llm:
+            base += 0.04
+        return max(0.0, min(base, 0.99))
 
     def _log_event(self, event_type: str, **payload: object) -> None:
         record = {"event": event_type, **payload}

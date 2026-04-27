@@ -113,6 +113,7 @@ def main():
     assistant = PetCareAssistant()
     briefing = assistant.generate_daily_briefing(owner=owner, schedule=schedule)
     print(briefing.answer)
+    print(f"  Confidence: {briefing.confidence:.2f}")
     print("  Workflow trace:")
     for step in briefing.workflow_trace:
         print(f"   - {step}")
@@ -124,6 +125,7 @@ def main():
         schedule=schedule,
     )
     print(answer.answer)
+    print(f"  Confidence: {answer.confidence:.2f}")
 
 
 if __name__ == "__main__":

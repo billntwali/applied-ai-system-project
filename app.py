@@ -21,7 +21,9 @@ def render_ai_response(response: AIResponse) -> None:
         st.markdown(response.answer)
 
     sources = ", ".join(item.title for item in response.sources) if response.sources else "None"
-    st.caption(f"Mode: `{response.mode}` · Sources: {sources}")
+    st.caption(
+        f"Mode: `{response.mode}` · Confidence: `{response.confidence:.2f}` · Sources: {sources}"
+    )
     with st.expander("Agentic workflow trace", expanded=False):
         for step in response.workflow_trace:
             st.write(f"- {step}")
