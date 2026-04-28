@@ -86,6 +86,10 @@ class Pet:
         """Return a copy of all tasks associated with this pet."""
         return list(self._tasks)
 
+    def remove_task(self, task: Task) -> None:
+        """Remove a specific task from this pet."""
+        self._tasks = [t for t in self._tasks if t is not task]
+
 
 class Owner:
     """Represents the pet owner and their daily availability."""

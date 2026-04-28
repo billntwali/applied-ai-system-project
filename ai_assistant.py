@@ -339,7 +339,8 @@ class PetCareAssistant:
 
     def _load_knowledge_base(self, path: Path) -> list[KnowledgeChunk]:
         if not path.exists():
-            raise FileNotFoundError(f"Knowledge base not found: {path}")
+            self.logger.warning(f"Knowledge base not found, skipping: {path}")
+            return []
 
         text = path.read_text(encoding="utf-8")
         sections: list[tuple[str, list[str]]] = []
@@ -519,15 +520,14 @@ class PetCareAssistant:
         )
 
         if style == "calm_coach":
-            watch_line = (
-                "Watch for stress, appetite, hydration, and medication timing changes."
+            watch_for = (
+                "Watch for: stress, appetite, hydration, and medication timing changes."
                 if "no_schedule_context" in risk_flags else
                 f"Watch for: {', '.join(risk_flags)}."
             )
             lines = [
-                "You're doing an important job keeping your pets healthy.",
                 f"Priority now: Start with the highest-priority required task and keep timing consistent.",
-                watch_line if watch_line.startswith("Watch for:") else f"Watch for: {watch_line}",
+                watch_for,
                 "Small next step: Set one reminder for the next critical task in today's window.",
                 f"Encouragement: A steady routine is more valuable than a perfect routine.",
                 f"Guidance focus ({intent}): {top_guidance}",
