@@ -1,0 +1,24 @@
+Example 1 - Daily Briefing (calm_coach)
+Prompt:
+Create today's prioritized pet-care briefing with immediate actions, risks to watch, and one practical adjustment.
+
+AI Response:
+Priority now: Start with the highest-priority required task and keep timing consistent.
+Watch for: no_obvious_schedule_risks.
+Small next step: Set one reminder for the next critical task in today's window.
+Encouragement: A steady routine is more valuable than a perfect routine.
+Guidance focus (safety): Medication Timing Matrix. Use a simple morning and evening medication matrix with checkbox tracking for each pet. Record exact administration times, appetite status, and any side effects to prevent missed or duplicated doses.
+Schedule snapshot: Owner: Jordan. Availability window: 08:00-20:00.
+Today's scheduled tasks:
+- 08:00-08:30: Mochi -> Morning walk (high, 30 min)
+- 08:30-08:40: Mochi -> Feed breakfast (high, 10 min)
+- 08:40-08:45: Mochi -> Medication (high, 5 min)
+- 08:45-08:50: Luna -> Feed breakfast (high, 5 min)
+- 08:50-09:00: Luna -> Clean litter box (medium, 10 min)
+Question: Create today's prioritized pet-care briefing with immediate actions, risks to watch, and one practical adjustment.
+Sources used: Medication Timing Matrix, Daily Routine Foundations, Mobility Support for Senior Pets, Senior Pet Care
+
+Mode: local_agentic_rag
+Confidence: 0.62
+Style: calm_coach
+Guardrail Triggered: False

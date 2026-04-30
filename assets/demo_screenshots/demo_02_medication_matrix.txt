@@ -1,0 +1,23 @@
+Example 2 - Medication Matrix Question
+Prompt:
+How should I set up a medication timing matrix for morning and evening doses?
+
+AI Response:
+I used PawPal's local pet-care notes and your schedule to build this suggestion.
+Best matching guidance: Medication Timing Matrix. Use a simple morning and evening medication matrix with checkbox tracking for each pet. Record exact administration times, appetite status, and any side effects to prevent missed or duplicated doses.
+Intent: medication
+Risk flags: no_obvious_schedule_risks
+Schedule snapshot: Owner: Jordan. Availability window: 08:00-20:00.
+Today's scheduled tasks:
+- 08:00-08:30: Mochi -> Morning walk (high, 30 min)
+- 08:30-08:40: Mochi -> Feed breakfast (high, 10 min)
+- 08:40-08:45: Mochi -> Medication (high, 5 min)
+- 08:45-08:50: Luna -> Feed breakfast (high, 5 min)
+- 08:50-09:00: Luna -> Clean litter box (medium, 10 min)
+Question: How should I set up a medication timing matrix for morning and evening doses?
+Sources used: Medication Timing Matrix, Medication Safety, Hydration and Heat Awareness, Post-Surgery Recovery Checklist
+
+Mode: local_agentic_rag
+Confidence: 0.66
+Style: balanced
+Guardrail Triggered: False
